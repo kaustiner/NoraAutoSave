@@ -1,3 +1,4 @@
+from core.speaker import falar
 import random
 from datetime import datetime
 
@@ -48,14 +49,14 @@ def executar():
     else:
         frase = random.choice(FRASES_NOITE)
 
-    print()
-    print(f"[NORA] {frase}")
-    print(
-        f"[NORA] Hoje é {dias[agora.weekday()]}, "
+    falar(frase)
+
+    falar(
+        f"Hoje é {dias[agora.weekday()]}, "
         f"{agora.strftime('%d/%m/%Y')}."
     )
-    print(
-        f"[NORA] Agora são "
+
+    falar(
+        f"Agora são "
         f"{agora.strftime('%H:%M')}."
     )
-    print()

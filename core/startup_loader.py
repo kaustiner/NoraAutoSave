@@ -4,7 +4,6 @@ import importlib.util
 
 PASTA_STARTUP = "startup"
 
-
 def carregar_startup_plugins():
 
     plugins = []
