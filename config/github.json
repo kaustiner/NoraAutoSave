@@ -1,0 +1,12 @@
+{
+    "repositorio": "https://github.com/kaustiner/NoraAutoSave.git",
+    "branch": "main",
+    "ignorar": [
+        ".git",
+        "__pycache__",
+        ".venv",
+        "venv",
+        ".idea",
+        ".vscode"
+    ]
+}
