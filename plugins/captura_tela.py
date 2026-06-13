@@ -1,7 +1,5 @@
 import io
 
-import pyautogui
-
 from PIL import Image
 from PIL import ImageWin
 
@@ -59,6 +57,8 @@ def executar(acao, argumentos):
         return
 
     try:
+
+        import pyautogui
 
         falar(
             "Capturando tela."

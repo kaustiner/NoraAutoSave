@@ -1,5 +1,8 @@
 import time
 import threading
+import json
+import os
+
 import sounddevice as sd
 
 from core.plugin_loader import carregar_plugins
@@ -25,6 +28,10 @@ from core.voice_manager import (
 
 from core.gesture_manager import (
     detectar_gesto
+)
+
+ARQUIVO_COMANDOS_REMOTOS = (
+    "data/remote_commands.json"
 )
 
 print("\n[NORA] Inicializando...\n")
@@ -62,6 +69,53 @@ def executar_texto(comando):
         comando,
         plugins
     )
+
+
+def processar_comandos_remotos():
+
+    if not os.path.exists(
+        ARQUIVO_COMANDOS_REMOTOS
+    ):
+        return
+
+    try:
+
+        with open(
+            ARQUIVO_COMANDOS_REMOTOS,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            comandos = json.load(f)
+
+        if not comandos:
+            return
+
+        for comando in comandos:
+
+            print(
+                f"\n[REMOTO] {comando}\n"
+            )
+
+            executar_texto(
+                comando
+            )
+
+        with open(
+            ARQUIVO_COMANDOS_REMOTOS,
+            "w",
+            encoding="utf-8"
+        ) as f:
+
+            json.dump(
+                [],
+                f,
+                ensure_ascii=False,
+                indent=4
+            )
+
+    except Exception:
+        pass
 
 
 def loop_terminal():
@@ -105,7 +159,11 @@ while True:
     # GESTOS
     # ======================
 
-    if gesto_pressionado() and not gesto_em_execucao:
+    if (
+        gesto_pressionado()
+        and
+        not gesto_em_execucao
+    ):
 
         gesto_em_execucao = True
 
@@ -137,7 +195,9 @@ while True:
 
         gravando = True
 
-        gravacao, callback = ouvir_push_to_talk()
+        gravacao, callback = (
+            ouvir_push_to_talk()
+        )
 
         stream = sd.InputStream(
             samplerate=44100,
@@ -148,7 +208,11 @@ while True:
 
         stream.start()
 
-    elif not alt_pressionado() and gravando:
+    elif (
+        not alt_pressionado()
+        and
+        gravando
+    ):
 
         gravando = False
 
@@ -174,5 +238,11 @@ while True:
                 executar_texto(
                     texto
                 )
+
+    # ======================
+    # REMOTO
+    # ======================
+
+    processar_comandos_remotos()
 
     time.sleep(0.05)
