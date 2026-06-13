@@ -6,6 +6,11 @@ from core.plugin_loader import carregar_plugins
 from core.command_parser import processar_comando
 from core.command_router import executar_comando
 
+from core.startup_loader import (
+    carregar_startup_plugins,
+    executar_startup_plugins
+)
+
 from core.input_manager import (
     iniciar_listener,
     alt_pressionado,
@@ -26,8 +31,20 @@ print("\n[NORA] Inicializando...\n")
 
 plugins = carregar_plugins()
 
+startup_plugins = (
+    carregar_startup_plugins()
+)
+
+executar_startup_plugins(
+    startup_plugins
+)
+
 print(
     f"[NORA] {len(plugins)} plugin(s) carregado(s)"
+)
+
+print(
+    f"[NORA] {len(startup_plugins)} startup plugin(s)"
 )
 
 print(

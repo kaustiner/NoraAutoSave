@@ -12,7 +12,7 @@ COMANDOS = {
     "enviar": [
         "enviar github",
         "atualizar github",
-        "sincronizar github",
+        "auto save github",
         "fazer backup github"
     ]
 }
