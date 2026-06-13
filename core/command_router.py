@@ -1,6 +1,7 @@
 def executar_comando(comando, plugins):
 
     encontrados = []
+    vistos = set()
 
     for plugin in plugins.values():
 
@@ -10,12 +11,21 @@ def executar_comando(comando, plugins):
 
                 if comando.startswith(alias):
 
-                    encontrados.append(
-                        (
-                            plugin,
-                            acao
-                        )
+                    chave = (
+                        plugin.NOME,
+                        acao
                     )
+
+                    if chave not in vistos:
+
+                        vistos.add(chave)
+
+                        encontrados.append(
+                            (
+                                plugin,
+                                acao
+                            )
+                        )
 
     if len(encontrados) == 0:
 
@@ -31,10 +41,10 @@ def executar_comando(comando, plugins):
             "\n[NORA] Mais de um plugin encontrado:\n"
         )
 
-        for i, (plugin, _) in enumerate(encontrados):
+        for i, (plugin, acao) in enumerate(encontrados):
 
             print(
-                f"{i+1} - {plugin.NOME}"
+                f"{i+1} - {plugin.NOME} ({acao})"
             )
 
         escolha = int(
