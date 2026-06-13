@@ -1,7 +1,5 @@
 import time
 import threading
-import json
-import os
 
 import sounddevice as sd
 
@@ -28,10 +26,6 @@ from core.voice_manager import (
 
 from core.gesture_manager import (
     detectar_gesto
-)
-
-ARQUIVO_COMANDOS_REMOTOS = (
-    "data/remote_commands.json"
 )
 
 print("\n[NORA] Inicializando...\n")
@@ -69,53 +63,6 @@ def executar_texto(comando):
         comando,
         plugins
     )
-
-
-def processar_comandos_remotos():
-
-    if not os.path.exists(
-        ARQUIVO_COMANDOS_REMOTOS
-    ):
-        return
-
-    try:
-
-        with open(
-            ARQUIVO_COMANDOS_REMOTOS,
-            "r",
-            encoding="utf-8"
-        ) as f:
-
-            comandos = json.load(f)
-
-        if not comandos:
-            return
-
-        for comando in comandos:
-
-            print(
-                f"\n[REMOTO] {comando}\n"
-            )
-
-            executar_texto(
-                comando
-            )
-
-        with open(
-            ARQUIVO_COMANDOS_REMOTOS,
-            "w",
-            encoding="utf-8"
-        ) as f:
-
-            json.dump(
-                [],
-                f,
-                ensure_ascii=False,
-                indent=4
-            )
-
-    except Exception:
-        pass
 
 
 def loop_terminal():
@@ -238,11 +185,5 @@ while True:
                 executar_texto(
                     texto
                 )
-
-    # ======================
-    # REMOTO
-    # ======================
-
-    processar_comandos_remotos()
 
     time.sleep(0.05)
