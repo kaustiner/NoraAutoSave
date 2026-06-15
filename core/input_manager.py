@@ -5,32 +5,48 @@ from core.settings_manager import (
     obter_gesture_key
 )
 
-ALT_PRESSIONADO = False
+VOICE_PRESSIONADO = False
 GESTO_PRESSIONADO = False
+
+
+MAPA_TECLAS = {
+    "alt_l": keyboard.Key.alt_l,
+    "alt_r": keyboard.Key.alt_r,
+
+    "ctrl_l": keyboard.Key.ctrl_l,
+    "ctrl_r": keyboard.Key.ctrl_r,
+
+    "shift_l": keyboard.Key.shift_l,
+    "shift_r": keyboard.Key.shift_r,
+
+    "f7": keyboard.Key.f7,
+    "f8": keyboard.Key.f8,
+    "f9": keyboard.Key.f9,
+    "f10": keyboard.Key.f10,
+    "f11": keyboard.Key.f11,
+    "f12": keyboard.Key.f12
+}
 
 
 def tecla_corresponde(tecla, nome_tecla):
 
     try:
 
-        if nome_tecla == "alt_l":
+        nome_tecla = nome_tecla.lower()
 
-            return tecla == keyboard.Key.alt_l
+        if nome_tecla in MAPA_TECLAS:
 
-        elif nome_tecla == "shift_l":
+            return tecla == MAPA_TECLAS[nome_tecla]
 
-            return tecla == keyboard.Key.shift_l
+        if hasattr(tecla, "char"):
 
-        elif nome_tecla == "shift_r":
-
-            return tecla == keyboard.Key.shift_r
-
-        elif hasattr(tecla, "char"):
-
-            return tecla.char == nome_tecla
+            return (
+                tecla.char
+                and
+                tecla.char.lower() == nome_tecla
+            )
 
     except:
-
         pass
 
     return False
@@ -38,7 +54,7 @@ def tecla_corresponde(tecla, nome_tecla):
 
 def ao_pressionar(tecla):
 
-    global ALT_PRESSIONADO
+    global VOICE_PRESSIONADO
     global GESTO_PRESSIONADO
 
     voice_key = obter_voice_key()
@@ -46,7 +62,7 @@ def ao_pressionar(tecla):
 
     if tecla_corresponde(tecla, voice_key):
 
-        ALT_PRESSIONADO = True
+        VOICE_PRESSIONADO = True
 
     if tecla_corresponde(tecla, gesture_key):
 
@@ -55,7 +71,7 @@ def ao_pressionar(tecla):
 
 def ao_soltar(tecla):
 
-    global ALT_PRESSIONADO
+    global VOICE_PRESSIONADO
     global GESTO_PRESSIONADO
 
     voice_key = obter_voice_key()
@@ -63,7 +79,7 @@ def ao_soltar(tecla):
 
     if tecla_corresponde(tecla, voice_key):
 
-        ALT_PRESSIONADO = False
+        VOICE_PRESSIONADO = False
 
     if tecla_corresponde(tecla, gesture_key):
 
@@ -83,7 +99,7 @@ def iniciar_listener():
 
 def alt_pressionado():
 
-    return ALT_PRESSIONADO
+    return VOICE_PRESSIONADO
 
 
 def gesto_pressionado():
