@@ -1,5 +1,6 @@
 import re
 
+
 PALAVRAS_IGNORADAS = [
     "nora",
     "por favor",
@@ -10,28 +11,39 @@ PALAVRAS_IGNORADAS = [
 ]
 
 
-def normalizar(texto: str) -> str:
+def normalizar(texto):
 
     texto = texto.lower()
 
-    # remove pontuação
-    texto = re.sub(r"[^\w\s]", "", texto)
+    texto = re.sub(
+        r"[^\w\s]",
+        "",
+        texto
+    )
 
-    # remove múltiplos espaços
-    texto = re.sub(r"\s+", " ", texto)
+    texto = re.sub(
+        r"\s+",
+        " ",
+        texto
+    )
 
-    texto = texto.strip()
-
-    return texto
+    return texto.strip()
 
 
-def processar_comando(comando: str) -> str:
+def processar_comando(comando):
 
-    comando = normalizar(comando)
+    comando = normalizar(
+        comando
+    )
 
     for palavra in PALAVRAS_IGNORADAS:
-        comando = comando.replace(palavra, "")
 
-    comando = re.sub(r"\s+", " ", comando).strip()
+        if comando.startswith(
+            palavra + " "
+        ):
+
+            comando = comando[
+                len(palavra):
+            ].strip()
 
     return comando

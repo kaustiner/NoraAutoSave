@@ -28,6 +28,16 @@ from core.gesture_manager import (
     detectar_gesto
 )
 
+from core.dialog_manager import (
+    ativo,
+    cancelar,
+    encerrar,
+    obter_plugin,
+    obter_acao
+)
+
+from core.speaker import falar
+
 print("\n[NORA] Inicializando...\n")
 
 plugins = carregar_plugins()
@@ -58,6 +68,29 @@ def executar_texto(comando):
     comando = processar_comando(
         comando
     )
+
+    if ativo():
+
+        if cancelar(comando):
+
+            encerrar()
+
+            falar(
+                "Operação cancelada."
+            )
+
+            return
+
+        nome_plugin = obter_plugin()
+
+        if nome_plugin in plugins:
+
+            plugins[nome_plugin].executar(
+                obter_acao(),
+                comando
+            )
+
+        return
 
     executar_comando(
         comando,
@@ -102,10 +135,6 @@ gesto_em_execucao = False
 
 while True:
 
-    # ======================
-    # GESTOS
-    # ======================
-
     if (
         gesto_pressionado()
         and
@@ -133,10 +162,6 @@ while True:
     elif not gesto_pressionado():
 
         gesto_em_execucao = False
-
-    # ======================
-    # VOZ
-    # ======================
 
     if alt_pressionado() and not gravando:
 
