@@ -1,0 +1,18 @@
+pip install opencv-python
+pip install mediapipe
+pip install pyttsx3
+pip install speechrecognition
+pip install pyautogui
+pip install pynput
+pip install pycaw
+pip install comtypes
+pip install sounddevice
+pip install scipy
+pip install numpy
+pip install pyautogui pillow
+pip install pywin32
+pip install flask
+pip install pyperclip
+pip install yt-dlp playsound
+pip install customtkinter
+pip show customtkinter
