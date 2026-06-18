@@ -3,7 +3,6 @@ from core.speaker import falar
 import cv2
 import pyautogui
 import mediapipe as mp
-import math
 import time
 
 from mediapipe.tasks.python import vision
@@ -13,14 +12,15 @@ pyautogui.FAILSAFE = False
 pyautogui.PAUSE = 0
 
 NOME = "controle_por_mao"
-
 DESCRICAO = "Controle por mão"
 
 COMANDOS = {
     "ativar": [
         "controle por mao",
+        "controle por gesto",
+        "controle por ge",
         "ativar controle por mao",
-        "ligar controle por mao"
+        "ligar controle por mao",
     ]
 }
 
@@ -29,293 +29,192 @@ mouse_seguro = False
 
 ultimo_esquerdo = 0
 ultimo_direito = 0
+ultimo_scroll = 0
 
 detector = None
 
 
-def distancia(p1, p2):
-
-    return math.sqrt(
-        (p1.x - p2.x) ** 2 +
-        (p1.y - p2.y) ** 2
-    )
-
-
-def dedo_levantado(
-    pontos,
-    ponta,
-    base
-):
-
+def dedo_levantado(pontos, ponta, base):
     return pontos[ponta].y < pontos[base].y
 
 
 def iniciar_controle():
-
     global executando
     global mouse_seguro
     global ultimo_esquerdo
     global ultimo_direito
+    global ultimo_scroll
     global detector
 
     executando = True
 
     if detector is None:
-
         options = vision.HandLandmarkerOptions(
             base_options=BaseOptions(
                 model_asset_path="models/hand_landmarker.task"
             ),
-            num_hands=1
+            num_hands=1,
         )
 
-        detector = vision.HandLandmarker.create_from_options(
-            options
-        )
+        detector = vision.HandLandmarker.create_from_options(options)
 
     cap = cv2.VideoCapture(0)
 
     if not cap.isOpened():
-
-        falar(
-            "Não foi possível abrir a câmera."
-        )
-
+        falar("Não foi possível abrir a câmera.")
         return
 
-    cap.set(
-        cv2.CAP_PROP_FRAME_WIDTH,
-        640
-    )
-
-    cap.set(
-        cv2.CAP_PROP_FRAME_HEIGHT,
-        480
-    )
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
     largura_tela, altura_tela = pyautogui.size()
 
     ultimo_x = largura_tela // 2
     ultimo_y = altura_tela // 2
 
-    suavizacao = 0.12
+    suavizacao = 0.20
 
     while executando:
-
         ok, frame = cap.read()
 
         if not ok:
             continue
 
-        frame = cv2.flip(
-            frame,
-            1
-        )
+        frame = cv2.flip(frame, 1)
 
-        rgb = cv2.cvtColor(
-            frame,
-            cv2.COLOR_BGR2RGB
-        )
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         imagem = mp.Image(
             image_format=mp.ImageFormat.SRGB,
             data=rgb
         )
 
-        resultado = detector.detect(
-            imagem
-        )
+        resultado = detector.detect(imagem)
 
         if resultado.hand_landmarks:
-
             pontos = resultado.hand_landmarks[0]
 
-            palma = pontos[9]
+            indicador_up = dedo_levantado(pontos, 8, 6)
+            medio_up = dedo_levantado(pontos, 12, 10)
+            anelar_up = dedo_levantado(pontos, 16, 14)
+            minimo_up = dedo_levantado(pontos, 20, 18)
 
-            polegar = pontos[4]
+            dedos = sum([
+                indicador_up,
+                medio_up,
+                anelar_up,
+                minimo_up
+            ])
 
             indicador = pontos[8]
-
-            medio = pontos[12]
-
-            anelar = pontos[16]
-
-            minimo = pontos[20]
-
-            indicador_up = dedo_levantado(
-                pontos,
-                8,
-                6
-            )
-
-            medio_up = dedo_levantado(
-                pontos,
-                12,
-                10
-            )
-
-            anelar_up = dedo_levantado(
-                pontos,
-                16,
-                14
-            )
-
-            minimo_up = dedo_levantado(
-                pontos,
-                20,
-                18
-            )
 
             agora = time.time()
 
             # =====================
-            # MOVER MOUSE (✊)
+            # 1 DEDO = MOVER MOUSE
             # =====================
+            if dedos == 1 and indicador_up:
+                x_min = 0.35
+                x_max = 0.65
 
-            if (
-                not indicador_up and
-                not medio_up and
-                not anelar_up and
-                not minimo_up
-            ):
+                y_min = 0.25
+                y_max = 0.75
 
-                x_min = 0.20
-                x_max = 0.80
+                x = max(x_min, min(indicador.x, x_max))
+                y = max(y_min, min(indicador.y, y_max))
 
-                y_min = 0.20
-                y_max = 0.80
+                x = (x - x_min) / (x_max - x_min)
+                y = (y - y_min) / (y_max - y_min)
 
-                x = max(
-                    x_min,
-                    min(
-                        palma.x,
-                        x_max
-                    )
-                )
-
-                y = max(
-                    y_min,
-                    min(
-                        palma.y,
-                        y_max
-                    )
-                )
-
-                x = (
-                    (x - x_min)
-                    /
-                    (x_max - x_min)
-                )
-
-                y = (
-                    (y - y_min)
-                    /
-                    (y_max - y_min)
-                )
-
-                alvo_x = int(
-                    x * largura_tela
-                )
-
-                alvo_y = int(
-                    y * altura_tela
-                )
+                alvo_x = int(x * largura_tela)
+                alvo_y = int(y * altura_tela)
 
                 ultimo_x = int(
-                    ultimo_x +
-                    (
-                        alvo_x - ultimo_x
-                    ) * suavizacao
+                    ultimo_x + (alvo_x - ultimo_x) * suavizacao
                 )
 
                 ultimo_y = int(
-                    ultimo_y +
-                    (
-                        alvo_y - ultimo_y
-                    ) * suavizacao
+                    ultimo_y + (alvo_y - ultimo_y) * suavizacao
                 )
 
-                pyautogui.moveTo(
-                    ultimo_x,
-                    ultimo_y
-                )
+                pyautogui.moveTo(ultimo_x, ultimo_y)
 
             # =====================
-            # JOINHA = CLIQUE ESQUERDO
+            # 2 DEDOS = CLIQUE ESQUERDO
             # =====================
-
             if (
-                not indicador_up and
-                not medio_up and
-                not anelar_up and
-                not minimo_up and
-                polegar.x > pontos[3].x
+                indicador_up
+                and medio_up
+                and not anelar_up
+                and not minimo_up
             ):
-
-                if agora - ultimo_esquerdo > 1:
-
+                if agora - ultimo_esquerdo > 0.8:
                     pyautogui.click()
-
                     ultimo_esquerdo = agora
 
             # =====================
-            # ✌️ CLIQUE DIREITO
+            # 3 DEDOS = CLIQUE DIREITO
             # =====================
-
             if (
-                indicador_up and
-                medio_up and
-                not anelar_up and
-                not minimo_up
+                indicador_up
+                and medio_up
+                and anelar_up
+                and not minimo_up
             ):
-
-                if agora - ultimo_direito > 1:
-
+                if agora - ultimo_direito > 0.8:
                     pyautogui.rightClick()
-
                     ultimo_direito = agora
 
             # =====================
-            # 🤏 SEGURAR CLIQUE
+            # 4 DEDOS = SEGURAR
             # =====================
-
-            dist = distancia(
-                polegar,
-                indicador
-            )
-
-            if dist < 0.05:
-
+            if (
+                indicador_up
+                and medio_up
+                and anelar_up
+                and minimo_up
+            ):
                 if not mouse_seguro:
-
                     pyautogui.mouseDown()
-
                     mouse_seguro = True
-
             else:
-
                 if mouse_seguro:
-
                     pyautogui.mouseUp()
-
                     mouse_seguro = False
+
+            # =====================
+            # 5 DEDOS = SCROLL
+            # =====================
+            polegar_aberto = abs(
+                pontos[4].x - pontos[3].x
+            ) > 0.04
+
+            if (
+                polegar_aberto
+                and indicador_up
+                and medio_up
+                and anelar_up
+                and minimo_up
+            ):
+                if agora - ultimo_scroll > 0.15:
+                    pyautogui.scroll(100)
+                    ultimo_scroll = agora
 
             h, w, _ = frame.shape
 
-            cv2.circle(
-                frame,
-                (
-                    int(
-                        palma.x * w
+            for indice in [4, 8, 12, 16, 20]:
+                ponto = pontos[indice]
+
+                cv2.circle(
+                    frame,
+                    (
+                        int(ponto.x * w),
+                        int(ponto.y * h)
                     ),
-                    int(
-                        palma.y * h
-                    )
-                ),
-                12,
-                (0, 255, 0),
-                -1
-            )
+                    10,
+                    (0, 255, 0),
+                    -1
+                )
 
         cv2.imshow(
             "NORA - Controle por Mao",
@@ -326,33 +225,20 @@ def iniciar_controle():
             break
 
     if mouse_seguro:
-
         pyautogui.mouseUp()
 
     cap.release()
-
     cv2.destroyAllWindows()
 
     executando = False
 
 
-def executar(
-    acao,
-    comando
-):
-
+def executar(acao, comando):
     global executando
 
     if executando:
-
-        falar(
-            "Controle por mão já está ativo."
-        )
-
+        falar("Controle por mão já está ativo.")
         return
 
-    falar(
-        "Controle por mão ativado."
-    )
-
+    falar("Controle por mão ativado.")
     iniciar_controle()
