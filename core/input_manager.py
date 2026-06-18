@@ -28,6 +28,34 @@ MAPA_TECLAS = {
 }
 
 
+def ativar_voz():
+
+    global VOICE_PRESSIONADO
+
+    VOICE_PRESSIONADO = True
+
+
+def desativar_voz():
+
+    global VOICE_PRESSIONADO
+
+    VOICE_PRESSIONADO = False
+
+
+def ativar_gesto():
+
+    global GESTO_PRESSIONADO
+
+    GESTO_PRESSIONADO = True
+
+
+def desativar_gesto():
+
+    global GESTO_PRESSIONADO
+
+    GESTO_PRESSIONADO = False
+
+
 def tecla_corresponde(tecla, nome_tecla):
 
     try:
@@ -60,11 +88,17 @@ def ao_pressionar(tecla):
     voice_key = obter_voice_key()
     gesture_key = obter_gesture_key()
 
-    if tecla_corresponde(tecla, voice_key):
+    if tecla_corresponde(
+        tecla,
+        voice_key
+    ):
 
         VOICE_PRESSIONADO = True
 
-    if tecla_corresponde(tecla, gesture_key):
+    if tecla_corresponde(
+        tecla,
+        gesture_key
+    ):
 
         GESTO_PRESSIONADO = True
 
@@ -77,11 +111,17 @@ def ao_soltar(tecla):
     voice_key = obter_voice_key()
     gesture_key = obter_gesture_key()
 
-    if tecla_corresponde(tecla, voice_key):
+    if tecla_corresponde(
+        tecla,
+        voice_key
+    ):
 
         VOICE_PRESSIONADO = False
 
-    if tecla_corresponde(tecla, gesture_key):
+    if tecla_corresponde(
+        tecla,
+        gesture_key
+    ):
 
         GESTO_PRESSIONADO = False
 
@@ -94,6 +134,7 @@ def iniciar_listener():
     )
 
     listener.daemon = True
+
     listener.start()
 
 

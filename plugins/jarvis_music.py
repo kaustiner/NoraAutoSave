@@ -9,6 +9,7 @@ DESCRICAO = "Easter egg do Jarvis"
 COMANDOS = {
     "jarvis": [
         "jarvis",
+        "i am iron man",
         "tony stark"
     ]
 }

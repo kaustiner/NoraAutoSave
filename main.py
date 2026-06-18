@@ -38,13 +38,24 @@ from core.dialog_manager import (
 
 from core.speaker import falar
 
+from ui.ui_manager import (
+    set_status,
+    set_mensagem
+)
+
+from ui.popup_ui import (
+    iniciar_interface
+)
+
+from core.interface_mode import (
+    obter_modo
+)
+
 print("\n[NORA] Inicializando...\n")
 
 plugins = carregar_plugins()
 
-startup_plugins = (
-    carregar_startup_plugins()
-)
+startup_plugins = carregar_startup_plugins()
 
 executar_startup_plugins(
     startup_plugins
@@ -62,8 +73,22 @@ print(
     "[NORA] Pronta.\n"
 )
 
+modo = obter_modo()
+
+if modo in [
+    "interface",
+    "ambos"
+]:
+
+    threading.Thread(
+        target=iniciar_interface,
+        daemon=True
+    ).start()
+
 
 def executar_texto(comando):
+
+    set_mensagem(comando)
 
     comando = processar_comando(
         comando
@@ -79,6 +104,10 @@ def executar_texto(comando):
                 "Operação cancelada."
             )
 
+            set_status(
+                "Pronta."
+            )
+
             return
 
         nome_plugin = obter_plugin()
@@ -90,11 +119,19 @@ def executar_texto(comando):
                 comando
             )
 
+        set_status(
+            "Pronta."
+        )
+
         return
 
     executar_comando(
         comando,
         plugins
+    )
+
+    set_status(
+        "Pronta."
     )
 
 
@@ -120,10 +157,16 @@ def loop_terminal():
         )
 
 
-threading.Thread(
-    target=loop_terminal,
-    daemon=True
-).start()
+if modo in [
+    "terminal",
+    "ambos"
+]:
+
+    threading.Thread(
+        target=loop_terminal,
+        daemon=True
+    ).start()
+
 
 iniciar_listener()
 
@@ -143,16 +186,20 @@ while True:
 
         gesto_em_execucao = True
 
-        print(
-            "\n[NORA] Detectando gesto..."
+        set_status(
+            "Gestos ativos..."
+        )
+
+        set_mensagem(
+            "Detectando gesto..."
         )
 
         gesto = detectar_gesto()
 
         if gesto:
 
-            print(
-                f"\n[NORA] Gesto detectado: {gesto}\n"
+            set_mensagem(
+                f"Gesto: {gesto}"
             )
 
             executar_texto(
@@ -167,9 +214,15 @@ while True:
 
         gravando = True
 
-        gravacao, callback = (
-            ouvir_push_to_talk()
+        set_status(
+            "Ouvindo..."
         )
+
+        set_mensagem(
+            "Aguardando voz..."
+        )
+
+        gravacao, callback = ouvir_push_to_talk()
 
         stream = sd.InputStream(
             samplerate=44100,
@@ -182,11 +235,14 @@ while True:
 
     elif (
         not alt_pressionado()
-        and
-        gravando
+        and gravando
     ):
 
         gravando = False
+
+        set_status(
+            "Processando..."
+        )
 
         stream.stop()
         stream.close()
@@ -203,12 +259,16 @@ while True:
 
             if texto:
 
-                print(
-                    f"\n[VOCÊ] {texto}\n"
+                set_mensagem(
+                    texto
                 )
 
                 executar_texto(
                     texto
                 )
+
+        set_status(
+            "Pronta."
+        )
 
     time.sleep(0.05)
