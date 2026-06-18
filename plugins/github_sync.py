@@ -83,19 +83,30 @@ def executar(acao, comando):
             "git add ."
         )
 
-        executar_git(
+        commit = executar_git(
             'git commit -m "Atualização automática da NORA"'
         )
+
+        falar(
+            "Sincronizando com GitHub."
+        )
+
+        pull = executar_git(
+            f"git pull origin {branch} --allow-unrelated-histories"
+        )
+
+        if pull.returncode != 0:
+            print(pull.stderr)
 
         falar(
             "Enviando para o GitHub."
         )
 
-        resultado = executar_git(
+        push = executar_git(
             f"git push origin {branch}"
         )
 
-        if resultado.returncode == 0:
+        if push.returncode == 0:
 
             falar(
                 "Backup concluído."
@@ -108,7 +119,7 @@ def executar(acao, comando):
             )
 
             print(
-                resultado.stderr
+                push.stderr
             )
 
     except Exception as erro:
