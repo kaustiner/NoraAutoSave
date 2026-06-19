@@ -32,6 +32,14 @@ def iniciar_interface():
 
     app = ctk.CTk()
 
+    def fechar():
+        os._exit(0)
+
+    app.protocol(
+        "WM_DELETE_WINDOW",
+        fechar
+    )
+
     app.title("NORA")
 
     largura = 420

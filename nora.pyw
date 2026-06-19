@@ -52,7 +52,6 @@ from core.interface_mode import (
 )
 
 print("\n[NORA] Inicializando...\n")
-print("MAIN INICIADO")
 
 plugins = carregar_plugins()
 
@@ -77,11 +76,12 @@ print(
 modo = obter_modo()
 print("MODO =", modo)
 
-if modo == "interface":
-    threading.Thread(
-        target=iniciar_interface,
-        daemon=True
-    ).start()
+if modo in [
+    "interface",
+    "ambos"
+]:
+    print("ABRINDO INTERFACE")
+    iniciar_interface()
 
 
 def executar_texto(comando):

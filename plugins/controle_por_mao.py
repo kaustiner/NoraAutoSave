@@ -7,6 +7,7 @@ import time
 
 from mediapipe.tasks.python import vision
 from mediapipe.tasks.python import BaseOptions
+import core.voice_manager as vm
 
 pyautogui.FAILSAFE = False
 pyautogui.PAUSE = 0
@@ -17,6 +18,7 @@ DESCRICAO = "Controle por mão"
 COMANDOS = {
     "ativar": [
         "controle por mao",
+        "controle por mão",
         "controle por gesto",
         "controle por ge",
         "ativar controle por mao",
@@ -32,10 +34,13 @@ ultimo_direito = 0
 ultimo_scroll = 0
 
 detector = None
+gravando = False
 
 
 def dedo_levantado(pontos, ponta, base):
-    return pontos[ponta].y < pontos[base].y
+    margem = 0.03
+
+    return pontos[ponta].y < (pontos[base].y - margem)
 
 
 def iniciar_controle():
@@ -45,6 +50,7 @@ def iniciar_controle():
     global ultimo_direito
     global ultimo_scroll
     global detector
+    global gravando
 
     executando = True
 
@@ -72,7 +78,7 @@ def iniciar_controle():
     ultimo_x = largura_tela // 2
     ultimo_y = altura_tela // 2
 
-    suavizacao = 0.20
+    suavizacao = 0.35
 
     while executando:
         ok, frame = cap.read()
@@ -109,6 +115,65 @@ def iniciar_controle():
             indicador = pontos[8]
 
             agora = time.time()
+
+            polegar_aberto = abs(
+                pontos[4].x -
+                pontos[3].x
+            ) > 0.05
+
+            telefone = (
+                polegar_aberto
+                and not indicador_up
+                and not medio_up
+                and not anelar_up
+                and minimo_up
+            )
+
+            if telefone:
+                falar("Estou ouvindo.")
+
+                if not gravando:
+
+                    def _gravar_e_transcrever():
+                        global gravando
+
+                        gravando = True
+
+                        try:
+                            gravacao, callback = vm.ouvir_push_to_talk()
+
+                            with vm.sd.InputStream(
+                                samplerate=vm.TAXA,
+                                channels=1,
+                                callback=callback
+                            ):
+                                vm.sd.sleep(4000)
+
+                            caminho = vm.salvar_audio(gravacao)
+
+                            if caminho:
+                                texto = vm.transcrever_arquivo(caminho)
+
+                                if texto:
+                                    falar(texto)
+
+                        except Exception as e:
+                            falar(f"Erro ao ouvir: {e}")
+
+                        finally:
+                            gravando = False
+
+                    import threading
+
+                    threading.Thread(
+                        target=_gravar_e_transcrever,
+                        daemon=True
+                    ).start()
+
+                else:
+                    falar("Já estou gravando.")
+
+                continue
 
             # =====================
             # 1 DEDO = MOVER MOUSE
@@ -183,7 +248,7 @@ def iniciar_controle():
                     mouse_seguro = False
 
             # =====================
-            # 5 DEDOS = SCROLL
+            # 5 DEDOS = WIN + TAB
             # =====================
             polegar_aberto = abs(
                 pontos[4].x - pontos[3].x
@@ -196,8 +261,11 @@ def iniciar_controle():
                 and anelar_up
                 and minimo_up
             ):
-                if agora - ultimo_scroll > 0.15:
-                    pyautogui.scroll(100)
+                if agora - ultimo_scroll > 3:
+                    pyautogui.hotkey(
+                        "win",
+                        "tab"
+                    )
                     ultimo_scroll = agora
 
             h, w, _ = frame.shape
@@ -241,4 +309,9 @@ def executar(acao, comando):
         return
 
     falar("Controle por mão ativado.")
-    iniciar_controle()
+    import threading
+
+    threading.Thread(
+        target=iniciar_controle,
+        daemon=True
+    ).start()
