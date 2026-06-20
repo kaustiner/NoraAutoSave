@@ -1,6 +1,6 @@
 {
     "repositorio": "https://github.com/kaustiner/nora-pro-claude/upload",
-    "branch": "master",
+    "branch": "main",
     "ignorar": [
         ".git",
         "__pycache__",
