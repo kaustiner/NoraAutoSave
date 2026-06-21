@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 🚀 INSTALAÇÃO COMPLETA DA NORA (SIMPLIFICADO)
 
 --Para instalar a NORA no seu computador, siga estes passos:
@@ -45,3 +46,6 @@ Clonar o repositório
 Rodar install.bat ou pip install -r requirements.txt
 Executar python main.py
 Usar comandos no terminal
+=======
+# NoraAutoSave
+>>>>>>> b072740c558e77bc3124f1d7cf83ad379cb18475

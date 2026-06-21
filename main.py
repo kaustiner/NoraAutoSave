@@ -14,6 +14,7 @@ from core.startup_loader import (
 
 from core.input_manager import (
     iniciar_listener,
+    parar_listener,
     alt_pressionado,
     gesto_pressionado
 )
@@ -51,6 +52,8 @@ from core.interface_mode import (
     obter_modo
 )
 
+import atexit
+
 print("\n[NORA] Inicializando...\n")
 print("MAIN INICIADO")
 
@@ -58,21 +61,11 @@ plugins = carregar_plugins()
 
 startup_plugins = carregar_startup_plugins()
 
-executar_startup_plugins(
-    startup_plugins
-)
+executar_startup_plugins(startup_plugins)
 
-print(
-    f"[NORA] {len(plugins)} plugin(s) carregado(s)"
-)
-
-print(
-    f"[NORA] {len(startup_plugins)} startup plugin(s)"
-)
-
-print(
-    "[NORA] Pronta.\n"
-)
+print(f"[NORA] {len(plugins)} plugin(s) carregado(s)")
+print(f"[NORA] {len(startup_plugins)} startup plugin(s)")
+print("[NORA] Pronta.\n")
 
 modo = obter_modo()
 print("MODO =", modo)
@@ -83,83 +76,54 @@ if modo == "interface":
         daemon=True
     ).start()
 
+atexit.register(parar_listener)
+
 
 def executar_texto(comando):
-
     set_mensagem(comando)
 
-    comando = processar_comando(
-        comando
-    )
+    comando = processar_comando(comando)
 
     if ativo():
-
         if cancelar(comando):
-
             encerrar()
-
-            falar(
-                "Operação cancelada."
-            )
-
-            set_status(
-                "Pronta."
-            )
-
+            falar("Operação cancelada.")
+            set_status("Pronta.")
             return
 
         nome_plugin = obter_plugin()
 
         if nome_plugin in plugins:
-
             plugins[nome_plugin].executar(
                 obter_acao(),
                 comando
             )
 
-        set_status(
-            "Pronta."
-        )
-
+        set_status("Pronta.")
         return
 
-    executar_comando(
-        comando,
-        plugins
-    )
-
-    set_status(
-        "Pronta."
-    )
+    executar_comando(comando, plugins)
+    set_status("Pronta.")
 
 
 def loop_terminal():
-
     while True:
+        try:
+            print("> ", end="", flush=True)
+            comando = input()
 
-        comando = input("> ")
+            if comando.lower() in ["sair", "exit"]:
+                print("\n[NORA] Encerrando...")
+                parar_listener()
+                exit()
 
-        if comando.lower() in [
-            "sair",
-            "exit"
-        ]:
+            executar_texto(comando)
 
-            print(
-                "\n[NORA] Encerrando..."
-            )
-
-            exit()
-
-        executar_texto(
-            comando
-        )
+        except EOFError:
+            break
 
 
-if modo in [
-    "terminal",
-    "ambos"
-]:
-
+if modo in ["terminal", "ambos"]:
     threading.Thread(
         target=loop_terminal,
         daemon=True
@@ -171,54 +135,28 @@ iniciar_listener()
 gravando = False
 gravacao = []
 stream = None
-
 gesto_em_execucao = False
 
 while True:
 
-    if (
-        gesto_pressionado()
-        and
-        not gesto_em_execucao
-    ):
-
+    if gesto_pressionado() and not gesto_em_execucao:
         gesto_em_execucao = True
-
-        set_status(
-            "Gestos ativos..."
-        )
-
-        set_mensagem(
-            "Detectando gesto..."
-        )
+        set_status("Gestos ativos...")
+        set_mensagem("Detectando gesto...")
 
         gesto = detectar_gesto()
 
         if gesto:
-
-            set_mensagem(
-                f"Gesto: {gesto}"
-            )
-
-            executar_texto(
-                gesto
-            )
+            set_mensagem(f"Gesto: {gesto}")
+            executar_texto(gesto)
 
     elif not gesto_pressionado():
-
         gesto_em_execucao = False
 
     if alt_pressionado() and not gravando:
-
         gravando = True
-
-        set_status(
-            "Ouvindo..."
-        )
-
-        set_mensagem(
-            "Aguardando voz..."
-        )
+        set_status("Ouvindo...")
+        set_mensagem("Aguardando voz...")
 
         gravacao, callback = ouvir_push_to_talk()
 
@@ -231,42 +169,23 @@ while True:
 
         stream.start()
 
-    elif (
-        not alt_pressionado()
-        and gravando
-    ):
-
+    elif not alt_pressionado() and gravando:
         gravando = False
-
-        set_status(
-            "Processando..."
-        )
+        set_status("Processando...")
 
         stream.stop()
         stream.close()
 
-        caminho = salvar_audio(
-            gravacao
-        )
+        caminho = salvar_audio(gravacao)
 
         if caminho:
-
-            texto = transcrever_arquivo(
-                caminho
-            )
+            texto = transcrever_arquivo(caminho)
 
             if texto:
+                set_mensagem(texto)
+                executar_texto(texto)
 
-                set_mensagem(
-                    texto
-                )
-
-                executar_texto(
-                    texto
-                )
-
-        set_status(
-            "Pronta."
-        )
+        set_status("Pronta.")
+        print("> ", end="", flush=True)
 
     time.sleep(0.05)
