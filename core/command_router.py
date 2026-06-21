@@ -1,5 +1,7 @@
+import re
+
+
 def normalizar(texto):
-    import re
     texto = texto.lower().strip()
     texto = re.sub(r"[^\w\s]", "", texto)
     texto = re.sub(r"\s+", " ", texto)
@@ -10,19 +12,24 @@ def comandos_similares(comando, alias):
     comando = normalizar(comando)
     alias = normalizar(alias)
 
-    if comando.startswith(alias):
+    # Match exato ou por prefixo (mais confiável)
+    if comando == alias:
         return True
 
-    palavras_alias = set(alias.split())
+    if comando.startswith(alias + " ") or comando.startswith(alias):
+        return True
+
+    # Similaridade só para aliases com 3+ palavras
+    palavras_alias = alias.split()
     palavras_comando = set(comando.split())
 
-    if not palavras_alias:
+    if len(palavras_alias) < 3:
         return False
 
-    matches = palavras_alias & palavras_comando
-    score = len(matches) / len(palavras_alias)
+    matches = sum(1 for p in palavras_alias if p in palavras_comando)
+    score = matches / len(palavras_alias)
 
-    return score >= 0.8
+    return score >= 0.85
 
 
 def executar_comando(comando, plugins):
@@ -38,6 +45,7 @@ def executar_comando(comando, plugins):
                     if chave not in vistos:
                         vistos.add(chave)
                         encontrados.append((plugin, acao))
+                    break  # achou match nessa ação, passa pra próxima
 
     if len(encontrados) == 0:
         print("\n[NORA] Não entendi o comando.\n")
@@ -49,8 +57,12 @@ def executar_comando(comando, plugins):
         for i, (plugin, acao) in enumerate(encontrados):
             print(f"{i+1} - {plugin.NOME} ({acao})")
 
-        escolha = int(input("\nEscolha: ")) - 1
-        plugin, acao = encontrados[escolha]
+        try:
+            escolha = int(input("\nEscolha: ")) - 1
+            plugin, acao = encontrados[escolha]
+        except:
+            print("\n[NORA] Escolha inválida.\n")
+            return
 
     else:
         plugin, acao = encontrados[0]
