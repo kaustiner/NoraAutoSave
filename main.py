@@ -70,7 +70,7 @@ print("[NORA] Pronta.\n")
 modo = obter_modo()
 print("MODO =", modo)
 
-if modo == "interface":
+if modo in ["interface", "ambos"]:
     threading.Thread(
         target=iniciar_interface,
         daemon=True
