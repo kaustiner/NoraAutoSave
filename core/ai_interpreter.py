@@ -1,27 +1,6 @@
-import json
-import requests
+﻿import json
 
-CONFIG = "config/ia.json"
-OLLAMA_URL = "http://localhost:11434/api/generate"
-
-
-def carregar_modelo():
-    try:
-        with open(
-            CONFIG,
-            "r",
-            encoding="utf-8"
-        ) as f:
-            dados = json.load(f)
-        return dados.get(
-            "modelo_interpretador",
-            "qwen3:0"
-        )
-    except:
-        return "qwen3:0"
-
-
-MODELO = carregar_modelo()
+from core.llm_client import chamar_llm
 
 
 def interpretar(comando, plugins):
@@ -68,17 +47,7 @@ Se não tiver certeza:
 
     try:
 
-        resposta = requests.post(
-            OLLAMA_URL,
-            json={
-                "model": MODELO,
-                "prompt": prompt,
-                "stream": False
-            },
-            timeout=20
-        )
-
-        texto = resposta.json()["response"]
+        texto = chamar_llm(prompt)
 
         inicio = texto.find("{")
         fim = texto.rfind("}")

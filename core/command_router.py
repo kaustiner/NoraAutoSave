@@ -48,7 +48,10 @@ def executar_comando(comando, plugins):
                     break  # achou match nessa ação, passa pra próxima
 
     if len(encontrados) == 0:
-        print("\n[NORA] Não entendi o comando.\n")
+        if "comando_desconhecido" in plugins:
+            plugins["comando_desconhecido"].executar("desconhecido", comando)
+        else:
+            print("\n[NORA] Não entendi o comando.\n")
         return
 
     if len(encontrados) > 1:

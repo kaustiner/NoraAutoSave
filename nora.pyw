@@ -1,3 +1,4 @@
+import os
 import time
 import threading
 
@@ -36,6 +37,8 @@ from core.dialog_manager import (
     obter_acao
 )
 
+from core.interface_mode import obter_modo
+
 from core.speaker import falar
 
 from ui.ui_manager import (
@@ -51,6 +54,8 @@ plugins = carregar_plugins()
 
 startup_plugins = carregar_startup_plugins()
 executar_startup_plugins(startup_plugins)
+
+modo = obter_modo()
 
 
 def executar_texto(comando):
@@ -82,13 +87,30 @@ def executar_texto(comando):
     set_status("Pronta.")
 
 
-# Inicia a interface em thread separada (sem bloquear)
-threading.Thread(
-    target=iniciar_interface,
-    daemon=True
-).start()
-
+# Inicia o listener em qualquer modo
 iniciar_listener()
+# Interface gráfica
+if modo in ("interface", "ambos"):
+    threading.Thread(
+        target=iniciar_interface,
+        daemon=True
+    ).start()
+# Terminal
+if modo in ("cmd", "ambos"):
+    def loop_terminal():
+        while True:
+            comando = input("> ")
+            if comando.lower() in ["sair", "exit"]:
+                falar("Encerrando.")
+                os._exit(0)
+            executar_texto(comando)
+    if modo == "ambos":
+        threading.Thread(
+            target=loop_terminal,
+            daemon=True
+        ).start()
+    else:
+        loop_terminal()
 
 gravando = False
 gravacao = []

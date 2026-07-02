@@ -1,10 +1,9 @@
-from core.speaker import falar
-
-import requests
+﻿from core.speaker import falar
+from core.llm_client import chamar_llm
 
 NOME = "perguntas_ia"
 
-DESCRICAO = "Responde perguntas usando Qwen local"
+DESCRICAO = "Responde perguntas usando IA local via Ollama ou LM Studio"
 
 COMANDOS = {
     "perguntar": [
@@ -15,10 +14,6 @@ COMANDOS = {
         "explique"
     ]
 }
-
-OLLAMA_URL = "http://localhost:11434/api/generate"
-
-MODELO = "qwen3:0.6b"
 
 
 def perguntar_ia(pergunta):
@@ -31,19 +26,7 @@ Pergunta:
 {pergunta}
 """
 
-    resposta = requests.post(
-        OLLAMA_URL,
-        json={
-            "model": MODELO,
-            "prompt": prompt,
-            "stream": False
-        },
-        timeout=60
-    )
-
-    resposta.raise_for_status()
-
-    return resposta.json()["response"]
+    return chamar_llm(prompt)
 
 
 def executar(acao, comando):

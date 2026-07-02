@@ -1,3 +1,4 @@
-{
-    "modelo_interpretador": "qwen3:0.6b"
+﻿{
+    "provider": "ollama",
+    "modelo_interpretador": "mistral"
 }
